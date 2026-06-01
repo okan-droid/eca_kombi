@@ -124,7 +124,7 @@ WEB_ARAYUZU = """
         </div>
 
         <div id="tech-section" class="hidden border-t border-gray-800 pt-4 space-y-3">
-            <h3 class="text-sm font-bold text-amber-500">🛠 nighttime Özel Servis Parametreleri</h3>
+            <h3 class="text-sm font-bold text-amber-500">🛠 Özel Servis Parametreleri</h3>
             <div class="space-y-2 text-xs">
                 <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 flex justify-between items-center">
                     <span>P01: Max Fan (RPM):</span>
