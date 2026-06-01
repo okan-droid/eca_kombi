@@ -64,89 +64,89 @@ WEB_ARAYUZU = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E.C.A. Kombi Global Filo Yönetimi</title>
+    <title>E.C.A. Kombi Fleet - Yönetici Komuta Merkezi</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-950 text-gray-100 p-4 min-h-screen flex flex-col items-center select-none">
-    <div class="w-full max-w-md bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 p-5 space-y-4 mt-4">
 
-        <div class="flex justify-between items-center border-b border-gray-800 pb-3 gap-2">
+    <div class="w-full max-w-5xl bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 p-6 space-y-6 mt-4">
+
+        <div class="flex justify-between items-center border-b border-gray-800 pb-4 gap-4">
             <div>
-                <h1 class="text-lg font-bold text-blue-500">E.C.A. FLEET</h1>
-                <p class="text-[10px] text-gray-400">Yetki: <span id="auth-level" class="text-emerald-400 font-bold">MİSAFİR</span></p>
+                <h1 class="text-xl font-black tracking-tight text-blue-500 flex items-center gap-2">
+                    <i class="fa-solid trips-daily"></i> E.C.A. FLEET COMMANDER
+                </h1>
+                <p class="text-xs text-gray-400">Yetki Seviyesi: <span id="auth-level" class="text-emerald-400 font-bold">MİSAFİR</span></p>
             </div>
-            <div id="login-area" class="flex gap-1 items-center">
-                <input type="text" id="username" placeholder="Kullanıcı" class="bg-gray-800 border border-gray-700 rounded px-1.5 py-0.5 text-xs w-16 text-center">
-                <input type="password" id="pass" placeholder="Şifre" class="bg-gray-800 border border-gray-700 rounded px-1.5 py-0.5 text-xs w-16 text-center">
-                <button onclick="girisYap()" class="bg-blue-600 text-[11px] px-2 py-0.5 rounded font-bold">Giriş</button>
+
+            <div id="login-area" class="flex gap-2 items-center">
+                <input type="text" id="username" placeholder="Kullanıcı" class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs w-24 text-center outline-none focus:border-blue-500">
+                <input type="password" id="pass" placeholder="Şifre" class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs w-24 text-center outline-none focus:border-blue-500">
+                <button onclick="girisYap()" class="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1 rounded-lg font-bold transition">Giriş</button>
             </div>
-            <button id="logout-btn" onclick="cikisYap()" class="hidden bg-red-900 text-xs px-3 py-1 rounded-lg font-bold">Çıkış</button>
+
+            <button id="logout-btn" onclick="cikisYap()" class="hidden bg-red-900/80 hover:bg-red-800 text-xs px-4 py-1.5 rounded-lg font-bold transition">
+                <i class="fa-solid fa-sign-out-alt"></i> Güvenli Çıkış
+            </button>
         </div>
 
-        <div id="admin-add-section" class="hidden bg-gray-950 p-3 rounded-xl border border-amber-900/50 space-y-2">
-            <span class="text-xs font-bold text-amber-500 block">➕ Yeni Kombi & Sorumlu Teknisyen Ekle</span>
-            <div class="space-y-1.5">
-                <div class="flex gap-1">
-                    <input type="text" id="new-kombi-id" placeholder="Kombi ID (örn: bursa_03)" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs flex-1">
-                    <input type="text" id="new-kombi-name" placeholder="Kombi Adı (örn: Bursa Bayi)" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs flex-1">
+        <div id="admin-add-section" class="hidden bg-gray-950 p-4 rounded-xl border border-amber-900/40 space-y-3">
+            <span class="text-xs font-bold text-amber-500 flex items-center gap-1.5">
+                <i class="fa-solid fa-plus-circle"></i> Yeni Kombi İstasyonu & Teknisyen Tanımla
+            </span>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <input type="text" id="new-kombi-id" placeholder="Kombi ID (örn: bursa_03)" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-amber-500">
+                <input type="text" id="new-kombi-name" placeholder="Kombi Adı (örn: Bursa Bayi)" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-amber-500">
+                <input type="text" id="new-tech-user" placeholder="Teknisyen Kullanıcı Adı" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-amber-500 text-amber-400">
+                <input type="password" id="new-tech-pass" placeholder="Teknisyen Şifre" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-amber-500 text-amber-400">
+            </div>
+            <button onclick="yeniKombiEkle()" class="w-full bg-amber-600 hover:bg-amber-500 text-xs py-2 rounded-lg font-bold transition shadow-lg shadow-amber-900/20">Sisteme ve Filoya Entegre Et</button>
+        </div>
+
+        <div class="space-y-2">
+            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-satellite-dish"></i> Aktif Filo İzleme Ekranı
+            </h2>
+            <div id="fleet-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="col-span-full text-center py-8 text-sm text-gray-500 bg-gray-950 rounded-xl border border-gray-800 border-dashed">
+                    Filonun anlık durumunu görmek için lütfen yetkili girişi yapın.
                 </div>
-                <div class="flex gap-1">
-                    <input type="text" id="new-tech-user" placeholder="Teknisyen K. Adı" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs flex-1 text-amber-400">
-                    <input type="password" id="new-tech-pass" placeholder="Teknisyen Şifre" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs flex-1 text-amber-400">
+            </div>
+        </div>
+
+        <div id="control-section" class="hidden border-t border-gray-800 pt-5 space-y-4">
+            <div class="bg-gray-950 p-4 rounded-xl border border-blue-900/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h3 id="selected-kombi-title" class="text-base font-bold text-blue-400">Seçili Kombi</h3>
+                    <p class="text-[11px] text-gray-400">Cihaz ID: <span id="selected-kombi-id" class="font-mono text-gray-300">--</span></p>
                 </div>
-                <button onclick="yeniKombiEkle()" class="w-full bg-amber-600 hover:bg-amber-500 text-xs py-1.5 rounded font-bold transition">Sisteme Entegre Et</button>
+                <div class="flex items-center gap-3 bg-gray-900 px-4 py-2 rounded-lg border border-gray-800 w-full md:w-auto justify-between">
+                    <span class="text-xs font-bold">Hedef Sıcaklık: <span id="set-val" class="text-blue-400 ml-1">45°C</span></span>
+                    <input type="range" id="set-slider" min="30" max="65" value="45" class="accent-blue-500 h-1.5 w-24">
+                    <button onclick="komutGonder('setpoint', document.getElementById('set-slider').value)" class="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1 rounded font-bold transition">Gönder</button>
+                </div>
             </div>
-        </div>
 
-        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 space-y-1">
-            <label class="text-xs text-gray-400 block font-bold">İzlenen Kombi Ünitesi:</label>
-            <select id="kombi-select" onchange="kombiDegisti()" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-blue-400 font-bold outline-none">
-                </select>
-        </div>
-
-        <div class="bg-gray-950 rounded-xl p-5 text-center border border-gray-800 relative">
-            <div id="live-temp" class="text-6xl font-black text-emerald-400">-- °C</div>
-            <div id="kombi-isim" class="text-xs text-gray-400 mt-1">Lütfen Giriş Yapın</div>
-            <div id="live-flame" class="text-xs mt-2 font-bold text-gray-500">Durum: Bekleniyor...</div>
-        </div>
-
-        <div id="alert-bar" class="w-full text-center py-2 rounded-lg font-bold text-xs bg-gray-800 text-gray-400">
-            Sistem Bağlantısı Bekleniyor
-        </div>
-
-        <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 space-y-3">
-            <div class="flex justify-between text-xs font-bold">
-                <span>Sıcaklık Ayarı (Setpoint):</span>
-                <span id="set-val" class="text-blue-400">45°C</span>
-            </div>
-            <input type="range" id="set-slider" min="30" max="65" value="45" class="w-full accent-blue-500">
-            <button onclick="komutGonder('setpoint', document.getElementById('set-slider').value)" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-lg text-sm font-bold transition">Komut Gönder</button>
-        </div>
-
-        <div id="tech-section" class="hidden border-t border-gray-800 pt-4 space-y-3">
-            <h3 class="text-sm font-bold text-amber-500">🛠 Özel Servis Parametreleri</h3>
-            <div class="space-y-2 text-xs">
-                <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 flex justify-between items-center">
+            <div id="tech-tools" class="hidden bg-gray-950 p-4 rounded-xl border border-gray-800 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div class="flex justify-between items-center bg-gray-900 p-3 rounded-lg border border-gray-800">
                     <span>P01: Max Fan (RPM):</span>
                     <div class="flex gap-1">
-                        <input type="number" id="p01-in" class="w-16 bg-gray-800 border border-gray-700 text-center rounded text-amber-400">
+                        <input type="number" id="p01-in" class="w-16 bg-gray-800 border border-gray-700 text-center rounded text-amber-400 py-0.5">
                         <button onclick="komutGonder('p01', document.getElementById('p01-in').value)" class="bg-amber-600 px-2 py-0.5 rounded font-bold">Yaz</button>
                     </div>
                 </div>
-                <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 flex justify-between items-center">
+                <div class="flex justify-between items-center bg-gray-900 p-3 rounded-lg border border-gray-800">
                     <span>P02: Pompa Gecikme (Sn):</span>
                     <div class="flex gap-1">
-                        <input type="number" id="p02-in" class="w-16 bg-gray-800 border border-gray-700 text-center rounded text-amber-400">
+                        <input type="number" id="p02-in" class="w-16 bg-gray-800 border border-gray-700 text-center rounded text-amber-400 py-0.5">
                         <button onclick="komutGonder('p02', document.getElementById('p02-in').value)" class="bg-amber-600 px-2 py-0.5 rounded font-bold">Yaz</button>
                     </div>
                 </div>
-                <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 space-y-2">
-                    <span class="text-red-400 font-bold block">Simülasyon Test Araçları:</span>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="komutGonder('error', 1)" class="bg-red-900/50 hover:bg-red-900 py-1.5 rounded text-[10px] font-bold text-red-200">E01 Arızası</button>
-                        <button onclick="komutGonder('error', 4)" class="bg-red-900/50 hover:bg-red-900 py-1.5 rounded text-[10px] font-bold text-red-200">E04 Arızası</button>
-                    </div>
-                    <button onclick="komutGonder('error', 0)" class="w-full bg-emerald-800 hover:bg-emerald-700 py-1.5 rounded text-[10px] font-bold text-emerald-100">Arızayı Resetle</button>
+                <div class="flex gap-1 items-center justify-between bg-gray-900 p-2 rounded-lg border border-gray-800">
+                    <button onclick="komutGonder('error', 1)" class="bg-red-950/40 hover:bg-red-900/80 border border-red-900 py-1.5 px-2 rounded text-[10px] font-bold text-red-300 transition flex-1">E01 Tetikle</button>
+                    <button onclick="komutGonder('error', 4)" class="bg-red-950/40 hover:bg-red-900/80 border border-red-900 py-1.5 px-2 rounded text-[10px] font-bold text-red-300 transition flex-1">E04 Tetikle</button>
+                    <button onclick="komutGonder('error', 0)" class="bg-emerald-950/40 hover:bg-emerald-900/80 border border-emerald-900 py-1.5 px-2 rounded text-[10px] font-bold text-emerald-300 transition flex-1">Resetle</button>
                 </div>
             </div>
         </div>
@@ -156,36 +156,66 @@ WEB_ARAYUZU = """
         let mevcutKullanici = "";
         let mevcutSifre = "";
         let aktifCihazId = "";
+        let izinliCihazlarListesi = [];
 
+        // CANLI VERİ GÜNCELLEME MOTORU (TÜM KARTLARI YENİLER)
         setInterval(async () => {
-            if(!aktifCihazId) return;
-            try {
-                let res = await fetch(`/api/durum/${aktifCihazId}`);
-                if(res.status !== 200) return;
-                let data = await res.json();
+            if(izinliCihazlarListesi.length === 0) return;
 
-                document.getElementById("live-temp").innerText = data.temp + " °C";
-                document.getElementById("live-flame").innerText = data.flame === 1 ? "Durum: 🔥 Kombi Yanıyor" : "Durum: 💤 Standby";
-                document.getElementById("kombi-isim").innerText = data.isim;
+            let gridContainer = document.getElementById("fleet-grid");
+            let htmlIcerik = "";
 
-                let alertBar = document.getElementById("alert-bar");
-                if (data.error !== 0) {
-                    alertBar.innerText = "⚠️ ARIZA: E" + data.error;
-                    alertBar.className = "w-full text-center py-2 rounded-lg font-bold text-xs bg-red-900 text-red-100";
-                } else {
-                    let yetkiText = document.getElementById("auth-level").innerText;
-                    alertBar.innerText = yetkiText !== "MİSAFİR" ? `🛠️ ${yetkiText} Modu Aktif` : "Sistem Normal";
-                    alertBar.className = yetkiText !== "MİSAFİR" ? "w-full text-center py-2 rounded-lg font-bold text-xs bg-amber-950 text-amber-300" : "w-full text-center py-2 rounded-lg font-bold text-xs bg-emerald-950 text-emerald-300";
-                }
-                if (!document.getElementById("tech-section").classList.contains("hidden")) {
-                    document.getElementById("p01-in").placeholder = data.p01;
-                    document.getElementById("p02-in").placeholder = data.p02;
-                }
-            } catch (err) { console.error(err); }
+            for(let cihaz of izinliCihazlarListesi) {
+                try {
+                    let res = await fetch(`/api/durum/${cihaz.id}`);
+                    if(res.status !== 200) continue;
+                    let data = await res.json();
+
+                    let kartRengi = "border-gray-800 bg-gray-950";
+                    let durumMetni = "💤 Standby";
+                    let durumRengi = "text-gray-400";
+                    let alevIcon = "";
+
+                    if (data.error !== 0) {
+                        kartRengi = "border-red-900/80 bg-red-950/20";
+                        durumMetni = `⚠️ ARIZA: E${data.error}`;
+                        durumRengi = "text-red-400 font-black animate-pulse";
+                    } else if (data.flame === 1) {
+                        kartRengi = "border-emerald-900/50 bg-emerald-950/10";
+                        durumMetni = "🔥 Kombi Yanıyor";
+                        durumRengi = "text-emerald-400 font-bold";
+                        alevIcon = "text-orange-500";
+                    }
+
+                    let seciliBorder = (aktifCihazId === cihaz.id) ? "ring-2 ring-blue-500 shadow-blue-900/30" : "";
+
+                    htmlIcerik += `
+                        <div onclick="cihazSec('${cihaz.id}', '${data.isim}')" class="p-4 rounded-xl border transition cursor-pointer transform hover:scale-[1.02] ${kartRengi} ${seciliBorder}">
+                            <div class="flex justify-between items-start">
+                                <span class="text-xs font-bold text-gray-300 block truncate max-w-[150px]">${data.isim}</span>
+                                <i class="fa-solid fa-fire ${alevIcon} text-xs"></i>
+                            </div>
+                            <span class="text-[10px] font-mono text-gray-500 block">${cihaz.id}</span>
+                            <div class="mt-4 flex justify-between items-baseline">
+                                <span class="text-3xl font-black tracking-tight ${data.error !== 0 ? 'text-red-400':'text-gray-100'}">${data.temp}°C</span>
+                                <span class="text-[10px] font-bold bg-gray-900 px-2 py-0.5 rounded border border-gray-800 text-blue-400">Hedef: ${data.setpoint}°C</span>
+                            </div>
+                            <div class="mt-2 pt-2 border-t border-gray-900 flex justify-between text-[10px]">
+                                <span class="${durumRengi}">${durumMetni}</span>
+                                <span class="text-gray-500">P01: ${data.p01}</span>
+                            </div>
+                        </div>
+                    `;
+                } catch (err) { console.error(err); }
+            }
+            gridContainer.innerHTML = htmlIcerik;
         }, 1500);
 
-        function kombiDegisti() {
-            aktifCihazId = document.getElementById("kombi-select").value;
+        function cihazSec(id, isim) {
+            aktifCihazId = id;
+            document.getElementById("control-section").classList.remove("hidden");
+            document.getElementById("selected-kombi-title").innerText = isim;
+            document.getElementById("selected-kombi-id").innerText = id;
         }
 
         async function girisYap() {
@@ -200,37 +230,25 @@ WEB_ARAYUZU = """
             let data = await response.json();
 
             if(data.status === "ok") {
-                mevcutKullanici = u;
-                mevcutSifre = p;
+                mevcutKullanici = u; mevcutSifre = p;
+                izinliCihazlarListesi = data.cihazlar;
 
                 document.getElementById("auth-level").innerText = data.rol;
                 document.getElementById("login-area").classList.add("hidden");
                 document.getElementById("logout-btn").classList.remove("hidden");
 
                 if(data.rol === "TEKNİSYEN" || data.rol === "YÖNETİCİ") {
-                    document.getElementById("tech-section").classList.remove("hidden");
+                    document.getElementById("tech-tools").classList.remove("hidden");
                 }
                 if(data.rol === "YÖNETİCİ") {
                     document.getElementById("admin-add-section").classList.remove("hidden");
                 }
-
-                kombiListesiniYenile(data.cihazlar);
+                if(data.cihazlar.length > 0) {
+                    cihazSec(data.cihazlar[0].id, data.cihazlar[0].isim);
+                }
             } else {
-                alert("Hatalı Kullanıcı Adı veya Şifre!");
+                alert("Hatalı Giriş Bilgileri!");
             }
-        }
-
-        function kombiListesiniYenile(cihazlar, secilecekId = null) {
-            let select = document.getElementById("kombi-select");
-            select.innerHTML = "";
-            cihazlar.forEach(c => {
-                let opt = document.createElement('option');
-                opt.value = c.id;
-                opt.innerText = c.isim;
-                select.appendChild(opt);
-            });
-            aktifCihazId = secilecekId ? secilecekId : cihazlar[0].id;
-            select.value = aktifCihazId;
         }
 
         async function yeniKombiEkle() {
@@ -239,64 +257,51 @@ WEB_ARAYUZU = """
             let tuser = document.getElementById("new-tech-user").value.trim();
             let tpass = document.getElementById("new-tech-pass").value.trim();
 
-            if(!kid || !kname || !tuser || !tpass) { 
-                alert("Lütfen tüm alanları (Kombi ve Teknisyen bilgileri) doldurun!"); 
-                return; 
-            }
+            if(!kid || !kname || !tuser || !tpass) { alert("Lütfen tüm alanları doldurun!"); return; }
 
             let response = await fetch('/api/kombi-ekle', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    username: mevcutKullanici,
-                    sifre: mevcutSifre,
-                    id: kid,
-                    isim: kname,
-                    tech_user: tuser,
-                    tech_pass: tpass
+                    username: mevcutKullanici, sifre: mevcutSifre,
+                    id: kid, isim: kname, tech_user: tuser, tech_pass: tpass
                 })
             });
             let data = await response.json();
             if(data.status === "ok") {
-                alert("Kombi oluşturuldu ve yeni teknisyen hesabı başarıyla tanımlandı!");
+                alert("Yeni İstasyon ve Teknisyen Başarıyla Filoya Eklendi!");
+                izinliCihazlarListesi = data.cihazlar;
                 document.getElementById("new-kombi-id").value = "";
                 document.getElementById("new-kombi-name").value = "";
                 document.getElementById("new-tech-user").value = "";
                 document.getElementById("new-tech-pass").value = "";
-                kombiListesiniYenile(data.cihazlar, kid);
-            } else {
-                alert(data.message);
-            }
+                cihazSec(kid, kname);
+            } else { alert(data.message); }
         }
 
         function cikisYap() {
-            mevcutKullanici = ""; mevcutSifre = ""; aktifCihazId = "";
-            document.getElementById("username").value = "";
-            document.getElementById("pass").value = "";
+            mevcutKullanici = ""; mevcutSifre = ""; aktifCihazId = ""; izinliCihazlarListesi = [];
+            document.getElementById("username").value = ""; document.getElementById("pass").value = "";
             document.getElementById("auth-level").innerText = "MİSAFİR";
             document.getElementById("login-area").classList.remove("hidden");
             document.getElementById("logout-btn").classList.add("hidden");
-            document.getElementById("tech-section").classList.add("hidden");
+            document.getElementById("control-section").classList.add("hidden");
             document.getElementById("admin-add-section").classList.add("hidden");
-            document.getElementById("kombi-select").innerHTML = "";
-            document.getElementById("live-temp").innerText = "-- °C";
-            document.getElementById("kombi-isim").innerText = "Lütfen Giriş Yapın";
-            document.getElementById("alert-bar").className = "w-full text-center py-2 rounded-lg font-bold text-xs bg-gray-800 text-gray-400";
-            document.getElementById("alert-bar").innerText = "Sistem Bağlantısı Bekleniyor";
+            document.getElementById("tech-tools").classList.add("hidden");
+            document.getElementById("fleet-grid").innerHTML = `
+                <div class="col-span-full text-center py-8 text-sm text-gray-500 bg-gray-950 rounded-xl border border-gray-800 border-dashed">
+                    Filonun anlık durumunu görmek için lütfen yetkili girişi yapın.
+                </div>`;
         }
 
         async function komutGonder(parametre, deger) {
             if(!aktifCihazId || deger === "") return;
-
             let response = await fetch('/api/komut', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    username: mevcutKullanici,
-                    sifre: mevcutSifre,
-                    cihaz_id: aktifCihazId,
-                    parametre: parametre,
-                    deger: parseInt(deger)
+                    username: mevcutKullanici, sifre: mevcutSifre,
+                    cihaz_id: aktifCihazId, parametre: parametre, deger: parseInt(deger)
                 })
             });
             let resData = await response.json();
