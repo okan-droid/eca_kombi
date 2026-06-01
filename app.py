@@ -6,6 +6,10 @@ import os
 
 app = Flask(__name__)
 
+# --- GÜVENLİK AYARI ---
+# Render panelinde Environment Variable olarak tanımlayabilirsiniz. Tanımlanmazsa varsayılan "1234" olur.
+TEKNISYEN_SIFRESI = os.environ.get("TEKNISYEN_SIFRESI", "1234")
+
 # --- SANAL KOMBİ DURUMU ---
 kombi_durumu = {
     "temp": 42,
@@ -17,22 +21,29 @@ kombi_durumu = {
     "mode": 0
 }
 
+
 # --- KOMBİ SİMÜLASYON MOTORU ---
 def kombi_fizik_motoru():
     while True:
-        if kombi_durumu["temp"] < kombi_durumu["setpoint"] and kombi_durumu["error"] == 0:
+        # Arıza aktifse kombiyi soğut ve yakma
+        if kombi_durumu["error"] != 0:
+            kombi_durumu["flame"] = 0
+            if kombi_durumu["temp"] > 22:
+                kombi_durumu["temp"] -= 1
+        # Arıza yoksa ve sıcaklık setpoint'in altındaysa yak
+        elif kombi_durumu["temp"] < kombi_durumu["setpoint"]:
             kombi_durumu["flame"] = 1
             kombi_durumu["temp"] += 1
-        elif kombi_durumu["temp"] > kombi_durumu["setpoint"] or kombi_durumu["error"] != 0:
+        # Setpoint'e ulaştıysa söndür
+        elif kombi_durumu["temp"] >= kombi_durumu["setpoint"]:
             kombi_durumu["flame"] = 0
-            if kombi_durumu["temp"] > 20:
+            if kombi_durumu["temp"] > 20:  # Doğal ortam soğuması simülasyonu
                 kombi_durumu["temp"] -= 1
-        else:
-            kombi_durumu["flame"] = 0
+
         time.sleep(2)
 
+
 # --- WEB ARAYÜZÜ (HTML) ---
-# (Önceki HTML kodunun aynısı, sadece API istekleri doğrudan aynı domain'e gidecek şekilde /api/durum olarak kalıyor)
 WEB_ARAYUZU = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -106,51 +117,79 @@ WEB_ARAYUZU = """
 
     <script>
         let yetki = "KULLANICI";
+        let tokenSifre = ""; // Backend doğrulaması için şifreyi burada saklıyoruz
+
         setInterval(async () => {
-            let res = await fetch('/api/durum');
-            let data = await res.json();
-            document.getElementById("live-temp").innerText = data.temp + " °C";
-            document.getElementById("live-flame").innerText = data.flame === 1 ? "Durum: 🔥 Kombi Yanıyor" : "Durum: 💤 Standby";
-            let alertBar = document.getElementById("alert-bar");
-            if (data.error !== 0) {
-                alertBar.innerText = "⚠️ ARIZA: E" + data.error;
-                alertBar.className = "w-full text-center py-2 rounded-lg font-bold text-xs bg-red-900 text-red-100";
-            } else {
-                alertBar.innerText = yetki === "TEKNİSYEN" ? "🛠️ Servis Modu Aktif" : "Sistem Normal";
-                alertBar.className = yetki === "TEKNİSYEN" ? "w-full text-center py-2 rounded-lg font-bold text-xs bg-amber-950 text-amber-300" : "w-full text-center py-2 rounded-lg font-bold text-xs bg-emerald-950 text-emerald-300";
-            }
-            if (yetki === "TEKNİSYEN") {
-                document.getElementById("p01-in").placeholder = data.p01;
-                document.getElementById("p02-in").placeholder = data.p02;
+            try {
+                let res = await fetch('/api/durum');
+                let data = await res.json();
+                document.getElementById("live-temp").innerText = data.temp + " °C";
+                document.getElementById("live-flame").innerText = data.flame === 1 ? "Durum: 🔥 Kombi Yanıyor" : "Durum: 💤 Standby";
+
+                let alertBar = document.getElementById("alert-bar");
+                if (data.error !== 0) {
+                    alertBar.innerText = "⚠️ ARIZA: E" + data.error;
+                    alertBar.className = "w-full text-center py-2 rounded-lg font-bold text-xs bg-red-900 text-red-100";
+                } else {
+                    alertBar.innerText = yetki === "TEKNİSYEN" ? "🛠️ Servis Modu Aktif" : "Sistem Normal";
+                    alertBar.className = yetki === "TEKNİSYEN" ? "w-full text-center py-2 rounded-lg font-bold text-xs bg-amber-950 text-amber-300" : "w-full text-center py-2 rounded-lg font-bold text-xs bg-emerald-950 text-emerald-300";
+                }
+                if (yetki === "TEKNİSYEN") {
+                    document.getElementById("p01-in").placeholder = data.p01;
+                    document.getElementById("p02-in").placeholder = data.p02;
+                }
+            } catch (err) {
+                console.error("Veri okuma hatası", err);
             }
         }, 1500);
 
-        function komutGonder(parametre, deger) {
-            if(!deger) return;
-            fetch('/api/komut', {
+        async function komutGonder(parametre, deger) {
+            if(deger === undefined || deger === "") return;
+
+            let response = await fetch('/api/komut', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({yetki: yetki, parametre: parametre, deger: parseInt(deger)})
+                body: JSON.stringify({
+                    sifre: tokenSifre, // Rol manipülasyonunu engellemek için şifre yollanıyor
+                    parametre: parametre, 
+                    deger: parseInt(deger)
+                })
             });
+
+            let resData = await response.json();
+            if(resData.status === "error") {
+                alert("Hata: " + resData.message);
+                if(response.status === 403) {
+                    cikisYap();
+                }
+            } else if(parametre === "error" && parseInt(deger) === 0) {
+                alert("Arıza başarıyla resetlendi! Kombi normal çalışma moduna dönüyor.");
+            }
         }
 
         function girisYap() {
-            if(document.getElementById("pass").value === "1234") {
+            let inputPass = document.getElementById("pass").value;
+            if(inputPass !== "") {
+                // Ön yüzde yetkiyi açıyoruz ancak backend şifre yanlışsa komutları yine de reddedecektir.
                 yetki = "TEKNİSYEN";
+                tokenSifre = inputPass;
                 document.getElementById("auth-level").innerText = "TEKNİSYEN";
                 document.getElementById("login-area").classList.add("hidden");
                 document.getElementById("logout-btn").classList.remove("hidden");
                 document.getElementById("tech-section").classList.remove("hidden");
-            } else { alert("Hatalı Şifre!"); }
+            } else { alert("Lütfen şifre girin!"); }
         }
 
         function cikisYap() {
             yetki = "KULLANICI";
+            tokenSifre = "";
+            document.getElementById("pass").value = "";
             document.getElementById("auth-level").innerText = "KULLANICI";
             document.getElementById("login-area").classList.remove("hidden");
             document.getElementById("logout-btn").classList.add("hidden");
             document.getElementById("tech-section").classList.add("hidden");
         }
+
         const slider = document.getElementById("set-slider");
         slider.oninput = function() { document.getElementById("set-val").innerText = this.value + "°C"; }
     </script>
@@ -158,33 +197,61 @@ WEB_ARAYUZU = """
 </html>
 """
 
+
 @app.route('/')
 def ana_sayfa():
     return render_template_string(WEB_ARAYUZU)
+
 
 @app.route('/api/durum', methods=['GET'])
 def durum_ver():
     return jsonify(kombi_durumu)
 
+
 @app.route('/api/komut', methods=['POST'])
 def komut_al():
-    req_data = request.get_json()
-    yetki = req_data.get("yetki")
+    req_data = request.get_json() or {}
+    sifre = req_data.get("sifre", "")
     parametre = req_data.get("parametre")
     deger = req_data.get("deger")
 
+    # 1. Genel Kullanıcı İşlemleri (Şifresiz Alan)
     if parametre == "setpoint":
-        kombi_durumu["setpoint"] = deger
-    elif yetki == "TEKNİSYEN":
-        if parametre == "p01": kombi_durumu["p01"] = deger
-        elif parametre == "p02": kombi_durumu["p02"] = deger
-        elif parametre == "error":
-            kombi_durumu["error"] = deger
-            if deger != 0: kombi_durumu["temp"] = 22
-    return jsonify({"status": "ok"})
+        try:
+            kombi_durumu["setpoint"] = int(deger)
+            return jsonify({"status": "ok"})
+        except (ValueError, TypeError):
+            return jsonify({"status": "error", "message": "Geçersiz setpoint değeri"}), 400
+
+    # 2. Teknisyen İşlemleri (Arka Planda Şifre Doğrulaması Şart)
+    elif parametre in ["p01", "p02", "error"]:
+        if str(sifre) != str(TEKNISYEN_SIFRESI):
+            return jsonify({"status": "error", "message": "Yetkisiz İşlem! Geçersiz şifre."}), 403
+
+        try:
+            deger = int(deger)
+            if parametre == "p01":
+                kombi_durumu["p01"] = deger
+            elif parametre == "p02":
+                kombi_durumu["p02"] = deger
+            elif parametre == "error":
+                kombi_durumu["error"] = deger
+                if deger != 0:
+                    kombi_durumu["temp"] = 22  # Hata durumunda kazan sıcaklığı düşer
+                else:
+                    # --- ARIZA RESETLEME DÜZELTMESİ ---
+                    # Kombinin kilitlenmesini önlemek için reset anında fizik motorunu besleyecek güvenli varsayılanlar atanır.
+                    kombi_durumu["temp"] = 35
+                    kombi_durumu["setpoint"] = 45
+                    kombi_durumu["flame"] = 0
+            return jsonify({"status": "ok"})
+        except (ValueError, TypeError):
+            return jsonify({"status": "error", "message": "Geçersiz parametre değeri"}), 400
+
+    return jsonify({"status": "error", "message": "Bilinmeyen istek"}), 400
+
 
 if __name__ == '__main__':
     threading.Thread(target=kombi_fizik_motoru, daemon=True).start()
-    # Bulut sunucuları portu çevresel değişkenlerden (PORT) okur
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
