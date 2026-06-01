@@ -7,7 +7,6 @@ import os
 app = Flask(__name__)
 
 # --- GÜVENLİK AYARI ---
-# Render panelinde Environment Variable olarak tanımlayabilirsiniz. Tanımlanmazsa varsayılan "1234" olur.
 TEKNISYEN_SIFRESI = os.environ.get("TEKNISYEN_SIFRESI", "1234")
 
 # --- SANAL KOMBİ DURUMU ---
@@ -25,19 +24,16 @@ kombi_durumu = {
 # --- KOMBİ SİMÜLASYON MOTORU ---
 def kombi_fizik_motoru():
     while True:
-        # Arıza aktifse kombiyi soğut ve yakma
         if kombi_durumu["error"] != 0:
             kombi_durumu["flame"] = 0
             if kombi_durumu["temp"] > 22:
                 kombi_durumu["temp"] -= 1
-        # Arıza yoksa ve sıcaklık setpoint'in altındaysa yak
         elif kombi_durumu["temp"] < kombi_durumu["setpoint"]:
             kombi_durumu["flame"] = 1
             kombi_durumu["temp"] += 1
-        # Setpoint'e ulaştıysa söndür
         elif kombi_durumu["temp"] >= kombi_durumu["setpoint"]:
             kombi_durumu["flame"] = 0
-            if kombi_durumu["temp"] > 20:  # Doğal ortam soğuması simülasyonu
+            if kombi_durumu["temp"] > 20:
                 kombi_durumu["temp"] -= 1
 
         time.sleep(2)
@@ -83,7 +79,7 @@ WEB_ARAYUZU = """
                 <span id="set-val" class="text-blue-400">45°C</span>
             </div>
             <input type="range" id="set-slider" min="30" max="65" value="45" class="w-full accent-blue-500">
-            <button onclick="komutGonder('setpoint', document.getElementById('set-slider').value)" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-lg text-sm font-bold transition">Dünyadan Komut Gönder</button>
+            <button onclick="komutGonder('setpoint', document.getElementById('set-slider').value)" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-lg text-sm font-bold transition">Komut Gönder</button>
         </div>
 
         <div id="tech-section" class="hidden border-t border-gray-800 pt-4 space-y-3">
@@ -117,7 +113,7 @@ WEB_ARAYUZU = """
 
     <script>
         let yetki = "KULLANICI";
-        let tokenSifre = ""; // Backend doğrulaması için şifreyi burada saklıyoruz
+        let tokenSifre = ""; 
 
         setInterval(async () => {
             try {
@@ -146,14 +142,21 @@ WEB_ARAYUZU = """
         async function komutGonder(parametre, deger) {
             if(deger === undefined || deger === "") return;
 
+            // İstek gövdesini dinamik hazırlıyoruz
+            let payload = {
+                parametre: parametre,
+                deger: parseInt(deger)
+            };
+
+            // Eğer setpoint DEĞİLSE (yani teknisyen parametresiyse) şifreyi ekle
+            if (parametre !== "setpoint") {
+                payload.sifre = tokenSifre;
+            }
+
             let response = await fetch('/api/komut', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    sifre: tokenSifre, // Rol manipülasyonunu engellemek için şifre yollanıyor
-                    parametre: parametre, 
-                    deger: parseInt(deger)
-                })
+                body: JSON.stringify(payload)
             });
 
             let resData = await response.json();
@@ -170,7 +173,6 @@ WEB_ARAYUZU = """
         function girisYap() {
             let inputPass = document.getElementById("pass").value;
             if(inputPass !== "") {
-                // Ön yüzde yetkiyi açıyoruz ancak backend şifre yanlışsa komutları yine de reddedecektir.
                 yetki = "TEKNİSYEN";
                 tokenSifre = inputPass;
                 document.getElementById("auth-level").innerText = "TEKNİSYEN";
@@ -211,11 +213,10 @@ def durum_ver():
 @app.route('/api/komut', methods=['POST'])
 def komut_al():
     req_data = request.get_json() or {}
-    sifre = req_data.get("sifre", "")
     parametre = req_data.get("parametre")
     deger = req_data.get("deger")
 
-    # 1. Genel Kullanıcı İşlemleri (Şifresiz Alan)
+    # 1. Genel Kullanıcı İşlemleri (Şifre parametresi aranmaz)
     if parametre == "setpoint":
         try:
             kombi_durumu["setpoint"] = int(deger)
@@ -223,8 +224,9 @@ def komut_al():
         except (ValueError, TypeError):
             return jsonify({"status": "error", "message": "Geçersiz setpoint değeri"}), 400
 
-    # 2. Teknisyen İşlemleri (Arka Planda Şifre Doğrulaması Şart)
+    # 2. Teknisyen İşlemleri (Şifre zorunludur)
     elif parametre in ["p01", "p02", "error"]:
+        sifre = req_data.get("sifre", "")
         if str(sifre) != str(TEKNISYEN_SIFRESI):
             return jsonify({"status": "error", "message": "Yetkisiz İşlem! Geçersiz şifre."}), 403
 
@@ -237,10 +239,8 @@ def komut_al():
             elif parametre == "error":
                 kombi_durumu["error"] = deger
                 if deger != 0:
-                    kombi_durumu["temp"] = 22  # Hata durumunda kazan sıcaklığı düşer
+                    kombi_durumu["temp"] = 22
                 else:
-                    # --- ARIZA RESETLEME DÜZELTMESİ ---
-                    # Kombinin kilitlenmesini önlemek için reset anında fizik motorunu besleyecek güvenli varsayılanlar atanır.
                     kombi_durumu["temp"] = 35
                     kombi_durumu["setpoint"] = 45
                     kombi_durumu["flame"] = 0
